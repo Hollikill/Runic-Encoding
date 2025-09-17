@@ -9,15 +9,17 @@ class Symbol
 private:
     int gridSizeX;
     int gridSizeY;
-    std::vector<Stroke> strokes;
+    std::vector<Stroke*> strokes;
 
 public:
     Symbol();
     Symbol(int sizeX);
     //Symbol(int sizeX, int sizeY);
     void displaySymbolText(int resolutionMutliplier, double drawThickness) const;
-    void addStroke(Stroke& stroke);
+    Stroke* addStroke();
+    std::vector<Stroke*> getStrokes() const;
     int getGridSize() const;
+    ~Symbol();
 };
 
 #include "Symbol.cpp"
