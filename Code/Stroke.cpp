@@ -18,10 +18,10 @@ std::vector<Point*> Stroke::getPoints () const {
     return points;
 }
 
-Symbol::~Symbol () {
+Stroke::~Stroke () {
     while (points.size() > 0) {
         delete points.at(0);
         points.at(0) == nullptr;
-        points.erase(0);
+        points.erase(points.begin());
     }
 }

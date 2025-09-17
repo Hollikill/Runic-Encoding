@@ -20,7 +20,7 @@ public:
 
     std::vector<Point*> getPoints() const; // get anchor points
 
-    ~Stroke () {} //destructor
+    ~Stroke (); //destructor
 };
 
 #include "Stroke.cpp"

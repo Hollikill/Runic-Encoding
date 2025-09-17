@@ -15,7 +15,7 @@ public:
     Symbol();
     Symbol(int sizeX);
     //Symbol(int sizeX, int sizeY);
-    void displaySymbolText(int multiplier) const;
+    void displaySymbolText(int resolutionMutliplier, double drawThickness) const;
     void addStroke(Stroke& stroke);
     int getGridSize() const;
 };
