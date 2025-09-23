@@ -4,6 +4,8 @@ Very work-in-progress currently, please be patient!
 
 This program is inteded to genearte written versions of english using new letters or whole-word characters.
 
+[changelog](https://github.com/Hollikill/Runic-Encoding/blob/main/changelog.md)
+
 ## Current Features
 
 - generation of unsanitized symbols
