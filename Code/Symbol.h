@@ -15,11 +15,13 @@ public:
     Symbol();
     Symbol(int sizeX);
     //Symbol(int sizeX, int sizeY);
-    void displaySymbolText(int resolutionMutliplier, double drawThickness) const;
+    void displaySymbolText(int resolutionMultiplier, double drawThickness) const;
     Stroke* addStroke();
     std::vector<Stroke*> getStrokes() const;
     int getGridSize() const;
     ~Symbol();
+    double distanceToLineSegment(int x, int y, int x1, int y1, int x2, int y2) const;
+    double distanceToLineSegment(Point* check, Point* start, Point* end) const;
 };
 
 #include "Symbol.cpp"

@@ -5,7 +5,6 @@
 
 class Point {
     public:
-    std::string type;
     int x;
     int y;
 };

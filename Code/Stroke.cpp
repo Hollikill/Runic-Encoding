@@ -8,7 +8,6 @@ void Stroke::addPoint (Point* p) {
 
 void Stroke::addPoint (int x, int y) {
     Point* p = new Point;
-    p->type = "point";
     p->x = x;
     p->y = y;
     points.push_back(p);

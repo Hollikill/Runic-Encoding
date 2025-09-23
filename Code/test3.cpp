@@ -22,17 +22,14 @@ int main () {
 
 	int gridSize = testSymbol.getGridSize();
 
-    //int pointsToAdd = (rand() % 3)+1;
-    int pointsToAdd = 0;
+    int pointsToAdd = (rand() % 3)+1;
     for (int i = 0; i < pointsToAdd; i++) {
         addPoint(testSymbol, rand() % gridSize, rand() % gridSize);
     }
 
     int linesToAdd = (rand() % 3)+1;
-    linesToAdd = 1;
     for (int i = 0; i < linesToAdd; i++) {
         int segments = (rand() % 2) + 2;
-        segments = 2;
         std::vector<int*> coordinates;
         for (int seg = 0; seg < segments; seg++) {
             int* position = new int[2];
