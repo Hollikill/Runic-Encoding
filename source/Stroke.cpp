@@ -20,7 +20,7 @@ std::vector<Point*> Stroke::getPoints () const {
 Stroke::~Stroke () {
     while (points.size() > 0) {
         delete points.at(0);
-        points.at(0) == nullptr;
+        points.at(0) = nullptr;
         points.erase(points.begin());
     }
 }
