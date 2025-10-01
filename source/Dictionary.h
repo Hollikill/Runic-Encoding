@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "Definition.h"
+#include "Symbol.h"
 
 class Dictionary
 {

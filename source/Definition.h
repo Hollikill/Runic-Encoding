@@ -1,6 +1,8 @@
 #ifndef DEFINITION_
 #define DEFINITION_
 
+#include <string>
+
 class Definition {
 private:
     int* symbolIDs;

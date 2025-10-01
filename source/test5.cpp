@@ -17,7 +17,7 @@ public:
     Dictionary* currentDictionary = nullptr;
     bool additionalOutput = true;
     int seed;
-    DisplayManager displayManager;
+    DisplayManager* displayManager = nullptr;
 };
 
 void settingsMenu(environmentData&);
@@ -49,9 +49,10 @@ int main () {
 
     // init environment
     environmentData environment;
+    environment.displayManager = new DisplayManager();
 
 	// generate random seed
-	regenerateSeed(environment);    
+	regenerateSeed(environment);
 
     int menuSelection = -1;
     menuSelection = menu();
@@ -140,7 +141,7 @@ void displayDictionarySymbols(environmentData environment) {
         std::cin >> displayScale;
     }
 
-    environment.displayManager.resolutionScale = displayScale;
+    environment.displayManager->resolutionScale = displayScale;
 
     Dictionary* dictionary = environment.currentDictionary;
     std::map<int,Symbol*> symbols = dictionary->symbols;
@@ -149,9 +150,7 @@ void displayDictionarySymbols(environmentData environment) {
         int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
         exclusiveLowerBound = nextSymbol+1;
         
-        environment.displayManager.renderSymbol(symbols.at(nextSymbol));
-        //std::cout << "==========" << std::endl << "Symbol #" << nextSymbol << std::endl <<  "==========" << std::endl;
-        //symbols.at(nextSymbol)->displaySymbolText(displayScale, 0.5);
+        environment.displayManager->renderSymbol(symbols.at(nextSymbol));
     }
 }
 

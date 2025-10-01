@@ -7,7 +7,7 @@ const std::string WINDOW_TITLE = "Runic Encoding";
 
 class DisplayManager {
 private:
-    sf::RenderWindow window;
+    sf::RenderWindow* window = new sf::RenderWindow();
 public:
     int resolutionScale = 10;
     double strokeThickness = 0.5;
