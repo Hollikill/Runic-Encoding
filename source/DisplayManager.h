@@ -6,9 +6,8 @@ const int WINDOW_SIZE_Y = 540;
 const std::string WINDOW_TITLE = "Runic Encoding";
 
 class DisplayManager {
-private:
-    sf::RenderWindow* window = new sf::RenderWindow();
 public:
+    sf::RenderWindow window;
     int resolutionScale = 10;
     double strokeThickness = 0.5;
 
@@ -17,6 +16,8 @@ public:
     void renderSymbol(Symbol* symbol);
 
     double distanceToLineSegment(int x, int y, int x1, int y1, int x2, int y2) const;
+
+    ~DisplayManager();
 };
 
 #include "DisplayManager.cpp"

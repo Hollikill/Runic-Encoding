@@ -5,7 +5,12 @@
 sf::Vector2u toVector2u(int, int);
 
 DisplayManager::DisplayManager() {
-    window->create(sf::VideoMode({ WINDOW_SIZE_X,WINDOW_SIZE_Y }), WINDOW_TITLE, sf::State::Windowed);
+    window.create(sf::VideoMode({ WINDOW_SIZE_X,WINDOW_SIZE_Y }), WINDOW_TITLE, sf::State::Windowed);
+    window.setFramerateLimit(60);
+}
+
+DisplayManager::~DisplayManager() {
+    //nothing
 }
 
 void DisplayManager::renderSymbol(Symbol* symbol) {
@@ -60,8 +65,7 @@ void DisplayManager::renderSymbol(Symbol* symbol) {
     // convert symbol to drawable object and draw
     sf::Texture texture(canvas, false);
     sf::Sprite sprite(texture);
-    window->draw(sprite);
-    window->display();
+    window.draw(sprite);
 }
 
 /*
