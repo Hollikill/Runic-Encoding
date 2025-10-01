@@ -47,10 +47,12 @@ const std::map<int, std::string> MENU_SETTINGS = {{1, "Toggle manual seed input"
 int main () {
     DisplayManager displayManager;
 
-    while (displayManager.window->isOpen()) {
-        sf::Event event;
-        while (displayManager.window.pollevent(event)) {
-            if (event.type == sf::Event::Closed) {
+    while (displayManager.window.isOpen())
+    {
+        while (const std::optional event = displayManager.window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+            {
                 displayManager.window.close();
             }
         }
@@ -86,7 +88,7 @@ int main () {
                 break;
         }
         menuSelection = menu();
-    }/**/
+    }*/
 
 	return 0;
 }
