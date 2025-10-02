@@ -9,17 +9,17 @@ class DisplayManager {
 public:
     sf::RenderWindow window;
     int resolutionScale = 10;
-    double strokeThickness = 0.5;
+    double strokeThickness = 1;
 
     DisplayManager();
 
-    void renderSymbol(Symbol* symbol);
+    sf::Image renderSymbol(Symbol*);
 
     double distanceToLineSegment(int x, int y, int x1, int y1, int x2, int y2) const;
 
     ~DisplayManager();
 };
 
-#include "DisplayManager.cpp"
+//#include "DisplayManager.cpp"
 
 #endif

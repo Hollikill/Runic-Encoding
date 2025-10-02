@@ -20,6 +20,6 @@ public:
     ~Symbol();
 };
 
-#include "Symbol.cpp"
+//#include "Symbol.cpp"
 
 #endif

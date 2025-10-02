@@ -22,6 +22,6 @@ public:
     ~Stroke (); //destructor
 };
 
-#include "Stroke.cpp"
+//#include "Stroke.cpp"
 
 #endif

@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include "Symbol.h"
 #include "DisplayManager.h"
+#include <iostream>
 
 sf::Vector2u toVector2u(int, int);
 
@@ -13,13 +14,16 @@ DisplayManager::~DisplayManager() {
     //nothing
 }
 
-void DisplayManager::renderSymbol(Symbol* symbol) {
+sf::Image DisplayManager::renderSymbol(Symbol* symbol) {
 
     // resize to new resolution
     int canvasSizeX = symbol->getGridSize() * resolutionScale;
     int canvasSizeY = symbol->getGridSize() * resolutionScale;
 
-    sf::Image canvas(toVector2u(canvasSizeX, canvasSizeY), sf::Color::Black);
+    sf::Color bgColor = sf::Color::Black;
+    sf::Color drawColor = sf::Color::Magenta;
+
+    sf::Image canvas(toVector2u(canvasSizeX, canvasSizeY), bgColor);
 
     // calculate adjustment for stroke coordinates basaed on scale of image
     double coordinateAdjustment = (resolutionScale / 2) - 0.5;
@@ -29,13 +33,13 @@ void DisplayManager::renderSymbol(Symbol* symbol) {
         for (int x = 0; x < canvasSizeY; x++) {
             // loop through strokes
             for (int i = 0; i < symbol->getStrokes().size(); i++) {
-                if (canvas.getPixel(toVector2u(x,y)) == sf::Color::Black) {
+                if (canvas.getPixel(toVector2u(x,y)) == bgColor) {
                     std::vector<Point*> points = symbol->getStrokes().at(i)->getPoints();
                     int pointsSize = points.size();
 
                     // loop through points
                     for (int p = 0; p < pointsSize; p++) {
-                        if (canvas.getPixel(toVector2u(x, y)) == sf::Color::Black) {
+                        if (canvas.getPixel(toVector2u(x, y)) == bgColor) {
                             // get coordinates of the point
                             int px = points.at(p)->x;
                             int py = points.at(p)->y;
@@ -46,14 +50,16 @@ void DisplayManager::renderSymbol(Symbol* symbol) {
                             double distance = (double)sqrt(pow(differenceX, 2) + pow(differenceY, 2));
 
                             // check if closer than thickness threshold and draw if so
-                            if (distance <= strokeThickness) { canvas.setPixel(toVector2u(x, y), sf::Color::White);
-                        }
+                            if (distance <= strokeThickness) {
+                                canvas.setPixel(toVector2u(x, y), drawColor);
+                            }
 
                             // check if there is a line segment, and evaluate if it is on the line
-                            if ((p < (pointsSize-1)) && canvas.getPixel(toVector2u(x, y)) == sf::Color::Black) {
+                            if ((p < (pointsSize-1)) && canvas.getPixel(toVector2u(x, y)) == bgColor) {
                                 distance = distanceToLineSegment(x, y, ((points.at(p)->x * resolutionScale)+coordinateAdjustment), ((points.at(p)->y * resolutionScale)+coordinateAdjustment), ((points.at(p+1)->x * resolutionScale)+coordinateAdjustment), ((points.at(p+1)->y * resolutionScale)+coordinateAdjustment));
-                                if (distance <= strokeThickness) { canvas.setPixel(toVector2u(x, y), sf::Color::White);
-                            }
+                                if (distance <= strokeThickness) {
+                                    canvas.setPixel(toVector2u(x, y), drawColor);
+                                }
                             }
                         }
                     }
@@ -62,10 +68,7 @@ void DisplayManager::renderSymbol(Symbol* symbol) {
         }
     }
 
-    // convert symbol to drawable object and draw
-    sf::Texture texture(canvas, false);
-    sf::Sprite sprite(texture);
-    window.draw(sprite);
+    return canvas;
 }
 
 /*

@@ -18,9 +18,13 @@ file(GLOB IMGUI
     external/imgui/*.h
     external/imgui/*.cpp
 )
+file(GLOB SOURCE
+    source/*.h
+    source/*.cpp)
 
 add_executable(${PROJECT_NAME}
                 ${IMGUI}
+                ${SOURCE}
                 source/main.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${PROJECT_NAME} PRIVATE SFML::Graphics)
