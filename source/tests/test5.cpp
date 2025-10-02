@@ -4,12 +4,8 @@
 #include <map>
 #include <algorithm>
 #include <limits>
-
-#include <SFML/Graphics.hpp>
-
 #include "Symbol.h"
 #include "Dictionary.h"
-#include "DisplayManager.h"
 
 class environmentData {
 public:
@@ -17,7 +13,6 @@ public:
     Dictionary* currentDictionary = nullptr;
     bool additionalOutput = true;
     int seed;
-    DisplayManager* displayManager = nullptr;
 };
 
 void settingsMenu(environmentData&);
@@ -29,6 +24,7 @@ void displayDictionarySymbols(environmentData);
 void createNewDictioanry(environmentData&);
 void regenerateSeed(environmentData);
 int uniqueOrderedCombinationsWithDuplicates (int uniqueElements, int maximumSize);
+void debugDisplaySymbol(Symbol symbol);
 void addPoint (Symbol& symbol, int x, int y);
 void addLine (Symbol& symbol, std::vector<int*> coordinates);
 Symbol* generateUnfilteredSymbolTest ();
@@ -49,7 +45,6 @@ int main () {
 
     // init environment
     environmentData environment;
-    environment.displayManager = new DisplayManager();
 
 	// generate random seed
 	regenerateSeed(environment);
@@ -140,17 +135,14 @@ void displayDictionarySymbols(environmentData environment) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin >> displayScale;
     }
-
-    environment.displayManager->resolutionScale = displayScale;
-
     Dictionary* dictionary = environment.currentDictionary;
     std::map<int,Symbol*> symbols = dictionary->symbols;
     int exclusiveLowerBound = -1;
     for (int i = 0; i < symbols.size(); i++) {
         int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
         exclusiveLowerBound = nextSymbol+1;
-        
-        environment.displayManager->renderSymbol(symbols.at(nextSymbol));
+        std::cout << "==========" << std::endl << "Symbol #" << nextSymbol << std::endl <<  "==========" << std::endl;
+        symbols.at(nextSymbol)->displaySymbolText(displayScale, 0.5);
     }
 }
 
@@ -215,6 +207,10 @@ int uniqueOrderedCombinationsWithDuplicates (int uniqueElements, int maximumSize
         uniqueCombinations += pow(uniqueElements, i+1);
     }
     return uniqueCombinations;
+}
+
+void debugDisplaySymbol(Symbol symbol) {
+    symbol.displaySymbolText(10, 1);
 }
 
 void addPoint (Symbol& symbol, int x, int y) {

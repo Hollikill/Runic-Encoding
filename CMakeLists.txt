@@ -12,7 +12,15 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
+include_directories(external/imgui/)
+
+file(GLOB IMGUI
+    external/imgui/*.h
+    external/imgui/*.cpp
+)
+
 add_executable(${PROJECT_NAME}
+                ${IMGUI}
                 source/main.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${PROJECT_NAME} PRIVATE SFML::Graphics)

@@ -6,6 +6,8 @@
 #include <limits>
 
 #include <SFML/Graphics.hpp>
+#include "imgui.h"
+#include "imgui-SFML.h"
 
 #include "Symbol.h"
 #include "Dictionary.h"
@@ -16,7 +18,7 @@ public:
     bool manualSeedInput = false;
     Dictionary* currentDictionary = nullptr;
     bool additionalOutput = true;
-    int seed;
+    int seed = 0;
     DisplayManager* displayManager = nullptr;
 };
 
@@ -26,7 +28,7 @@ int menu();
 int menu(std::map<int, std::string>);
 int menu(std::map<int, std::string>, std::string);
 void displayDictionarySymbols(environmentData);
-void createNewDictioanry(environmentData&);
+void createNewDictioanry(environmentData&, int, int);
 void regenerateSeed(environmentData);
 int uniqueOrderedCombinationsWithDuplicates (int uniqueElements, int maximumSize);
 void addPoint (Symbol& symbol, int x, int y);
@@ -44,51 +46,131 @@ const std::map<int, std::string> MENU_SETTINGS = {{1, "Toggle manual seed input"
                                                     {2, "Toggle additonal output"},
                                                     {99, "Back to main menu"}};
 
-int main () {
-    DisplayManager displayManager;
-
-    while (displayManager.window.isOpen())
-    {
-        while (const std::optional event = displayManager.window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-            {
-                displayManager.window.close();
-            }
-        }
-
-        displayManager.window.clear();
-        displayManager.window.display();
-    }
-
-    /*std::cout << std::boolalpha; // ensure booleans appear readable in text output
+int main() {
+    std::cout << std::boolalpha; // ensure booleans appear readable in text output
 
     // init environment
     environmentData environment;
     environment.displayManager = new DisplayManager();
+    auto& window = environment.displayManager->window;
+    ImGui::SFML::Init(window);
 
-	// generate random seed
-	regenerateSeed(environment);
+    // generate random seed
+    regenerateSeed(environment);
 
-    int menuSelection = -1;
-    menuSelection = menu();
-    while (menuSelection != MENU_MAIN.rbegin()->first) {
-        switch(menuSelection) {
+    sf::Clock deltaClock;
+    while (window.isOpen())
+    {
+        while (const std::optional event = window.pollEvent())
+        {
+            ImGui::SFML::ProcessEvent(window, event.value());
+            if (event->is<sf::Event::Closed>())
+            {
+                window.close();
+            }
+        }
+
+        ImGui::SFML::Update(window, deltaClock.restart());
+
+        //fill screen
+        auto io = ImGui::GetIO();
+        ImGui::SetNextWindowSize({ io.DisplaySize.x, io.DisplaySize.y });
+        ImGui::SetNextWindowPos({ 0,0 });
+
+        //main menu
+        ImGui::Begin("Main Menu", false, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // regenerate seed
+        if (ImGui::Button("Regenerate Seed")) {
+            regenerateSeed(environment);
+        }
+
+        // creating a dictionary
+        if (ImGui::Button("Create new dictionary")) {
+            if (environment.currentDictionary == nullptr) {
+                ImGui::OpenPopup("Create Dictionary");
+            }
+            else {
+                ImGui::OpenPopup("Confirm Dictionary Creation");
+            }
+        }
+        if (ImGui::BeginPopupModal("Confirm Dictionary Creation", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::Text("You already have a dictionary. Creating a new dictionary will delete the previous dictionary.\nIf you wish to keep a previous dictionary, please save it before creating a new dictionary.");
+            ImGui::Separator();
+            ImGui::Text("Proceed?");
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+                ImGui::OpenPopup("Create Dictionary");
+            }
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        if (ImGui::BeginPopup("Create Dictionary")) {
+            static char buf1[10] = "1"; ImGui::InputText("Total words in dictionary", buf1, sizeof(buf1), ImGuiInputTextFlags_CharsDecimal); int totalWords = atoi(buf1);
+            static char buf2[3] = "1"; ImGui::InputText("Maximum symbols per word", buf2, sizeof(buf2), ImGuiInputTextFlags_CharsDecimal); int maxSymbols = atoi(buf2);
+            if (ImGui::Button("Finalize parameters")) {
+                createNewDictioanry(environment, totalWords, maxSymbols);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+        // displaying a dictionary
+        if (ImGui::Button("Display Dictionary")) {
+            // do shit
+        }
+
+        // changing settings
+        if (ImGui::Button("Settings")) {
+            ImGui::OpenPopup("Settings");
+        }
+        if (ImGui::BeginPopup("Settings")) {
+            
+            ImGui::Checkbox("Toggle manual seed input", &environment.manualSeedInput);
+            ImGui::Checkbox("Toggle additional console output", &environment.additionalOutput);
+            ImGui::EndPopup();
+        }
+
+        ImGui::End();
+
+        
+        
+
+        /*int menuSelection = -1;
+        menuSelection = menu();
+        switch (menuSelection) {
             case 1:
                 regenerateSeed(environment);
+                menuSelection = menu();
                 break;
             case 2:
                 createNewDictioanry(environment);
+                menuSelection = menu();
                 break;
             case 3:
-            	if (environment.currentDictionary) { displayDictionarySymbols(environment); }
+                if (environment.currentDictionary) { displayDictionarySymbols(environment); }
+                menuSelection = menu();
                 break;
             case 4:
                 settingsMenu(environment);
+                menuSelection = menu();
                 break;
-        }
-        menuSelection = menu();
-    }*/
+            case 99:
+                environment.displayManager->window.close();
+                break;
+        }*/
+        
+        window.clear();
+
+        ImGui::SFML::Render(window); // This should be last render step most of the time
+        window.display();
+    }
+
+    ImGui::SFML::Shutdown();
 
 	return 0;
 }
@@ -135,7 +217,7 @@ int menu(std::map<int, std::string> optionNames, std::string title) {
     }
     std::cout << "Enter number of chosen option: ";
 
-    int input;
+    int input = 0;
     std::cin >> input;
     while (!input || (std::find(possibleOptions.begin(), possibleOptions.end(), input) == possibleOptions.end())) {
         std::cin.clear();
@@ -170,27 +252,15 @@ void displayDictionarySymbols(environmentData environment) {
     }
 }
 
-void createNewDictioanry(environmentData& environment) {
-    std::string confirmation = "y";
-    if (environment.currentDictionary) {
-        std::cout << "WARNING! WARNING! WARNING!" << std::endl
-        << "Doing this will delete the previous dictionary." << std::endl
-        << "If you wish to keep a previous dictionary, please save it before creating a new dictionary." << std::endl
-        << "Proceed (y/n)? ";
-        std::cin >> confirmation;
-    }
-    if (confirmation == "y") {
+void createNewDictioanry(environmentData& environment, int totalWords, int maxSymbols) {
         environment.currentDictionary = new Dictionary();
         Dictionary* dictionary = environment.currentDictionary;
 
         dictionary->seed = environment.seed;////
 
-        // ask for generation parameters
-        std::cout << "Number of distinct words in dictionary: ";
-        std::cin >> dictionary->totalWords;
-
-        std::cout << std::endl << "Maximum composite symbols in a word: ";
-        std::cin >> dictionary->compositeSymbolMaximum;
+        // set generation parameters
+        dictionary->totalWords = totalWords;
+        dictionary->compositeSymbolMaximum = maxSymbols;
 
         int symbolsNeededForDictionary = 0;
         while (uniqueOrderedCombinationsWithDuplicates(symbolsNeededForDictionary, dictionary->compositeSymbolMaximum) < dictionary->totalWords) {
@@ -201,7 +271,6 @@ void createNewDictioanry(environmentData& environment) {
         for (int i = 0; i < symbolsNeededForDictionary; i++) {
             dictionary->addSymbol(generateUnfilteredSymbolTest());
         }
-    }
 }
 
 void regenerateSeed(environmentData environment) {

@@ -2,14 +2,14 @@
 
 Very work-in-progress currently, please be patient!
 
-This program is inteded to genearte written versions of english using new letters or whole-word characters.
+This program is inteded to genearte alternate written forms of english using new letters or whole-word characters.
 
 [changelog](https://github.com/Hollikill/Runic-Encoding/blob/main/changelog.md)
 
 ## Current Features
 
+- Simple UI interface
 - generation of unsanitized symbols
-- basic debug display for symbols
 
 ## Feature Goals
 

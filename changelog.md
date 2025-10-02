@@ -1,5 +1,17 @@
 # Changelog
 
+## 10.1.2025
+
+- Now using SFML library for rendering symbols
+- Now using Dear ImGui, and imgui-sfml libraries
+- Program now functions on an application loop
+- Some functions of previos code recreated
+  - seed: yes
+  - new dict: yes
+  - display dict: no
+  - change settings: yes
+- CMake integration w/ libraries (yay!)
+
 ## 9.26.2025
 
 - very basic Dictionary class functions

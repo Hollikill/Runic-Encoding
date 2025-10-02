@@ -1,12 +1,14 @@
 #include <string>
 #include "Definition.h"
 
-Definition::Definition(int newMaximumSymbols) {
-    Definition(newMaximumSymbols, "");
-}
-Definition::Definition(int newMaximumSymbols, std::string newWord) {
+Definition::Definition(int newMaximumSymbols) : maximumSymbols(newMaximumSymbols) {
+    word = "";
     int* newSymbolIDs = new int[newMaximumSymbols];
-    Definition(newSymbolIDs, 0, newMaximumSymbols, newWord);
+    length = 0;
+}
+Definition::Definition(int newMaximumSymbols, std::string newWord) : maximumSymbols(newMaximumSymbols), word(newWord) {
+    int* newSymbolIDs = new int[newMaximumSymbols];
+    length = 0;
 }
 Definition::Definition(int* newSymbolIDs, int newLength, int newMaximumSymbols, std::string newWord) : symbolIDs(newSymbolIDs), length(newLength), maximumSymbols(newMaximumSymbols), word(newWord) {};
 
