@@ -61,7 +61,7 @@ int main() {
     regenerateSeed(environment);
 
     bool displayingSymbol = false;
-    std::cout << sf::Color::Red.toInteger() << "|" << sf::Color::Black.toInteger() << "\n";
+    bool confirmCreation = false;
 
     sf::Clock deltaClock;
     while (window.isOpen())
@@ -73,9 +73,17 @@ int main() {
             {
                 window.close();
             }
+            else if (event->is<sf::Event::Resized>())
+            {
+                sf::FloatRect view({ 0, 0 }, { (float)window.getSize().x, (float)window.getSize().y });
+                window.setView(sf::View(view));
+            }
             else if (event->is<sf::Event::KeyPressed>()) {
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::C)) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::C) && environment.currentDictionary != nullptr) {
                     displayingSymbol = true;
+                    /*std::cout << environment.currentDictionary->symbols.at(0)->isBaked(10) << "|";
+                    environment.currentDictionary->symbols.at(0)->bakeTexture(10, 0.5);
+                    std::cout << environment.currentDictionary->symbols.at(0)->isBaked(10) << "|";*/
                 }
             }
         }
@@ -84,21 +92,21 @@ int main() {
         window.clear();
 
         if (displayingSymbol) {
-            unsigned int size = environment.currentDictionary->symbols.at(0)->getGridSize() * environment.displayManager->resolutionScale;
-            sf::Image canvas = environment.displayManager->renderSymbol(environment.currentDictionary->symbols.at(0));
-            sf::Texture texture(canvas, false);
+            environment.currentDictionary->symbols.at(0)->bakeTexture(10, 0.5);
+            sf::Texture texture = environment.currentDictionary->symbols.at(0)->getBakedTexture(10);
             sf::Sprite sprite(texture);
-            sprite.setPosition({ 500,100 });
+            sprite.setPosition({ 10,10 });
             window.draw(sprite);
         }
 
         //fill screen
-        auto io = ImGui::GetIO();
+        /*ImGuiIO io = ImGui::GetIO();
         ImGui::SetNextWindowSize({ io.DisplaySize.x / 2, io.DisplaySize.y / 2 });
-        ImGui::SetNextWindowPos({ 0,0 });
+        ImGui::SetNextWindowPos({ 0,0 });*/
 
         //main menu
-        ImGui::Begin("Main Menu", false, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        //ImGui::Begin("Main Menu", false, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ImGui::Begin("Main Menu");
 
         // regenerate seed
         if (ImGui::Button("Regenerate Seed")) {
@@ -107,11 +115,11 @@ int main() {
 
         // creating a dictionary
         if (ImGui::Button("Create new dictionary")) {
-            if (environment.currentDictionary == nullptr) {
-                ImGui::OpenPopup("Create Dictionary");
+            if (environment.currentDictionary != nullptr && !confirmCreation) {
+                ImGui::OpenPopup("Confirm Dictionary Creation");
             }
             else {
-                ImGui::OpenPopup("Confirm Dictionary Creation");
+                ImGui::OpenPopup("Create Dictionary");
             }
         }
         if (ImGui::BeginPopupModal("Confirm Dictionary Creation", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
@@ -119,8 +127,9 @@ int main() {
             ImGui::Separator();
             ImGui::Text("Proceed?");
             if (ImGui::Button("OK")) {
+                confirmCreation = true;
+                std::cout << confirmCreation << "\n";
                 ImGui::CloseCurrentPopup();
-                ImGui::OpenPopup("Create Dictionary");
             }
             ImGui::SetItemDefaultFocus();
             ImGui::SameLine();
@@ -134,6 +143,7 @@ int main() {
             static char buf2[3] = "1"; ImGui::InputText("Maximum symbols per word", buf2, sizeof(buf2), ImGuiInputTextFlags_CharsDecimal); int maxSymbols = atoi(buf2);
             if (ImGui::Button("Finalize parameters")) {
                 createNewDictioanry(environment, totalWords, maxSymbols);
+                confirmCreation = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -145,8 +155,11 @@ int main() {
         }
         if (ImGui::BeginPopupModal("Dictionary Symbols")) {
             //displayDictionarySymbols(environment);
-            ImGui::Text("All symbols in current dictioanry");
             ImGui::SliderInt("Size of symbols", &environment.displayManager->resolutionScale, 5, 25);
+            ImGui::SameLine();
+            if (ImGui::Button("Close Window")) {
+                ImGui::CloseCurrentPopup();
+            }
             ImGui::Separator();
 
             Dictionary* dictionary = environment.currentDictionary;
@@ -169,11 +182,15 @@ int main() {
                 int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
                 exclusiveLowerBound = nextSymbol + 1;
 
-                unsigned int size = symbols.at(nextSymbol)->getGridSize() * environment.displayManager->resolutionScale;
+                if (!symbols.at(nextSymbol)->isBaked((float)environment.displayManager->resolutionScale)) {
+                    symbols.at(nextSymbol)->bakeTexture((float)environment.displayManager->resolutionScale, 0.5);
+                }
+                ImGui::Image(symbols.at(nextSymbol)->getBakedTexture((float)environment.displayManager->resolutionScale), {80, 80}, sf::Color::Blue, sf::Color::Magenta);
+                /*unsigned int size = symbols.at(nextSymbol)->getGridSize() * environment.displayManager->resolutionScale;
                 sf::Image canvas = environment.displayManager->renderSymbol(symbols.at(nextSymbol));
                 canvas.setPixel({ 5,5 }, sf::Color::Magenta);
                 sf::Texture texture(canvas, false);
-                ImGui::Image(texture, sf::Color::Blue, sf::Color::Magenta);
+                ImGui::Image(texture, sf::Color::Blue, sf::Color::Magenta);*/
                 ImGui::EndChild();
             }
             ImGui::EndPopup();
@@ -192,37 +209,13 @@ int main() {
 
         ImGui::End();
 
-        sf::CircleShape circ(300, 8);
+        sf::CircleShape circ(300, (rand() % 4) + 30);
         circ.setFillColor(sf::Color::Yellow);
-        float radius = 300.f;
+        float radius = (float)((rand()%6)+297);
         circ.setRadius(radius);
         circ.setOrigin({radius, radius});
-        circ.setPosition({ 500, 500 });
+        circ.setPosition({ 300, 300 });
         window.draw(circ);
-
-        /*int menuSelection = -1;
-        menuSelection = menu();
-        switch (menuSelection) {
-            case 1:
-                regenerateSeed(environment);
-                menuSelection = menu();
-                break;
-            case 2:
-                createNewDictioanry(environment);
-                menuSelection = menu();
-                break;
-            case 3:
-                if (environment.currentDictionary) { displayDictionarySymbols(environment); }
-                menuSelection = menu();
-                break;
-            case 4:
-                settingsMenu(environment);
-                menuSelection = menu();
-                break;
-            case 99:
-                environment.displayManager->window.close();
-                break;
-        }*/
         
         ImGui::SFML::Render(window); // This should be last render step most of the time
         window.display();

@@ -13,10 +13,6 @@ public:
 
     DisplayManager();
 
-    sf::Image renderSymbol(Symbol*);
-
-    double distanceToLineSegment(int x, int y, int x1, int y1, int x2, int y2) const;
-
     ~DisplayManager();
 };
 
