@@ -9,6 +9,7 @@ struct BakedTexture {
     sf::Texture texture;
     int scale;
     double strokeThickness;
+    bool needsRebake = false;
 };
 
 class Symbol
@@ -31,7 +32,10 @@ public:
 
     bool isBaked(int) const;
     sf::Texture getBakedTexture(int scale);
+    void queueRebakeTextures();
+    void queueRebakeTexture(int);
     void bakeTexture(int scale, double strokeThickness);
+
     double distanceToLineSegment(int x, int y, int x1, int y1, int x2, int y2) const;
 
     ~Symbol();

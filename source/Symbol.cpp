@@ -37,7 +37,7 @@ int Symbol::getGridSize() const {
 bool Symbol::isBaked(int scale) const {
     bool found = false;
     for (int i = 0; i < bakedTextures.size(); i++) {
-        if (bakedTextures.at(i).scale == scale) { found = true; }
+        if (bakedTextures.at(i).scale == scale && !bakedTextures.at(i).needsRebake) { found = true; }
     }
     return found;
 }
@@ -45,6 +45,18 @@ bool Symbol::isBaked(int scale) const {
 sf::Texture Symbol::getBakedTexture(int scale) {
     for (int i = 0; i < bakedTextures.size(); i++) {
         if (bakedTextures.at(i).scale == scale) { return bakedTextures.at(i).texture; }
+    }
+}
+
+void Symbol::queueRebakeTextures() {
+    for (int i = 0; i < bakedTextures.size(); i++) {
+        bakedTextures.at(i).needsRebake = true;
+    }
+}
+
+void Symbol::queueRebakeTexture(int scale) {
+    for (int i = 0; i < bakedTextures.size(); i++) {
+        if (bakedTextures.at(i).scale == scale) { bakedTextures.at(i).needsRebake = true; }
     }
 }
 
@@ -57,8 +69,8 @@ void Symbol::bakeTexture(int scale, double strokeThickness) {
     int canvasSizeX = gridSizeX * scale;
     int canvasSizeY = gridSizeY * scale;
 
-    sf::Color bgColor = sf::Color::White;
-    sf::Color drawColor = sf::Color::Magenta;
+    sf::Color bgColor = sf::Color::Black;
+    sf::Color drawColor = sf::Color::White;
 
     sf::Image canvas(toVector2u(canvasSizeX, canvasSizeY), bgColor);
 
@@ -87,7 +99,7 @@ void Symbol::bakeTexture(int scale, double strokeThickness) {
                             double distance = (double)sqrt(pow(differenceX, 2) + pow(differenceY, 2));
 
                             // check if closer than thickness threshold and draw if so
-                            if (distance <= strokeThickness) {
+                            if (distance <= strokeThickness*1.5) {
                                 canvas.setPixel(toVector2u(x, y), drawColor);
                             }
 
@@ -108,7 +120,8 @@ void Symbol::bakeTexture(int scale, double strokeThickness) {
     BakedTexture baked = {
         sf::Texture(canvas, false),
         scale,
-        strokeThickness        
+        strokeThickness,
+        false
     };
     bakedTextures.push_back(baked);
 

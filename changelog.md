@@ -1,5 +1,9 @@
 # Changelog
 
+## 10.2.2025
+
+- finally actually rendering symbols. ugh...
+
 ## 10.1.2025
 
 - Now using SFML library for rendering symbols
