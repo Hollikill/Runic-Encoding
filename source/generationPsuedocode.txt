@@ -1,0 +1,121 @@
+generation parameters
+[..] variable
+?.. toggle
+
+a point weight
+b hollow points
+c line weight
+d intersection types
+    d1 degree of difference
+
+/**********************************************************/
+
+struct part {
+    type: point, line
+    pos[]
+}
+
+/**********************************************************/
+
+bool directionvalid(part, endpointid, direction) {
+    bool isvalid false
+    if line {
+        bool flip = false
+        if endpointID = 1 {flip = true}
+        if dir == getdirline(part, flip) { isvalid = true }
+    }
+    if point {
+        isvalid true
+    }
+    return isvalid
+}
+
+vec2 getdirline(part<line>, bool flip) {
+    if !flip {
+        endp0 = part.endp0
+        endp1 = part.endp1
+    }
+    else {
+        endp0 = part.endp1
+        endp1 = part.endp0
+    }
+
+    difx = to1preservenegative(endp0.x - endp1.x)
+    dify = to1preservenegative(endp0.y - endp1.y)
+    
+    return {difx, dify}
+}
+
+bool nooverlapwithintersec(endpoint, dir) {
+    part = intersecs.getfrom(endpoint)
+    return directionvalid(part, getclosestendpoint(part, endpoint.pos), dir)
+}
+
+endpID getclosestendpoint(part, pos) {
+
+}
+
+/**********************************************************/
+
+/* GENERATE BAG */
+
+// generate parts
+
+arr parts ..
+
+parts push points rand [a]
+    - standard
+    ?b circular
+parts push points rand [c]
+    - 45deg variations
+
+// generate intersections
+
+arr intersections ..
+    ?d
+    - no more than [d1] difference
+    - must be perpendicular to each other
+
+/* ENSURE CONNECTIONS */
+
+//  match parts & intersections
+
+for intersec
+    rand line1
+    rand line2
+    while (previous intersec.pair = pair(rand1, rand2)) {
+        regen
+        attempts > 10 regen from #generatebag
+    }
+    intersec.1 = line1 . endpoint[rand]
+    intersec.2 = line2 . endpoint[rand]
+
+// add reference points for unconnected parts
+
+arr referencepoints ..
+
+for part
+    if not intersecs.has(part) {
+        endp1 = endpoint[rand]
+        part2 = parts[rand]
+        endp2 = part2 . endpoint[rand]
+
+        bool checkintersec = intersecs.hasendp(endp2)
+        if checkintersec { intersecs.getfrom(endp2).otherendp }
+
+        if checkintersec {
+            do while !directionvalid(part, endp2.getID, dir) {
+                refdir = direction rand % 8
+            }
+        }
+        else {
+            do while !directionvalid(part, endp2.getID, dir) && nooverlapwithintersec(endp2, dir)
+        }
+        
+        new reference point{endp1, endp2, refdir}
+    }
+
+/* ASSEMBLY STEPS */
+
+// assemble based on intersec and referencepoints
+
