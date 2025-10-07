@@ -7,52 +7,64 @@ b hollow points
 c line weight
 d intersection types
     d1 degree of difference
+e intersection weights
 
 /**********************************************************/
+
+symbolfrom(assemblyparts) {
+    vec2 size = getboundingboxsize(assemblyparts)
+    Symbol symbol = new Symbol(size);
+    for item : assemblyparts {
+        Stroke* stroke = symbol.addStroke()
+        for point : item.part.points {
+            stroke.addpoint(point)
+        }
+    }
+}
+
+vec2 getboundingboxsize(assemblyparts) {
+    getmaxx(assemblyparts)
+    getminx(assemblyparts)
+    getmaxy(assemblyparts)
+    getminy(assemblyparts)
+    return {maxx-minx, maxy-miny}
+}
+
+// four functions at once: [../..] blocks collapse based on function name
+int get[min/max][x/y](assemblyparts) {
+    int [min/max][x/y] = 0;
+    for item : assemblyparts {
+        for point : item.part.points {
+            if point.[x/y] [min:</max:>] [min/max][x/y] {
+                [min/max][x/y] = point.[x/y]
+            }
+        }
+    }
+    return [min/max][x/y]
+}
+
+/**********************************************************/
+
+struct ref {
+    part one;
+    part two;
+    bool gap; // false for intersec, true for point of reference
+}
+
+enum DIRECTION {
+    UP;
+    UPLEFT;
+    LEFT;
+    DOWNLEFT;
+    DOWN;
+    DOWNRIGHT;
+    RIGHT;
+    UPRIGHT;
+}
 
 struct part {
-    type: point, line
-    pos[]
-}
-
-/**********************************************************/
-
-bool directionvalid(part, endpointid, direction) {
-    bool isvalid false
-    if line {
-        bool flip = false
-        if endpointID = 1 {flip = true}
-        if dir == getdirline(part, flip) { isvalid = true }
-    }
-    if point {
-        isvalid true
-    }
-    return isvalid
-}
-
-vec2 getdirline(part<line>, bool flip) {
-    if !flip {
-        endp0 = part.endp0
-        endp1 = part.endp1
-    }
-    else {
-        endp0 = part.endp1
-        endp1 = part.endp0
-    }
-
-    difx = to1preservenegative(endp0.x - endp1.x)
-    dify = to1preservenegative(endp0.y - endp1.y)
-    
-    return {difx, dify}
-}
-
-bool nooverlapwithintersec(endpoint, dir) {
-    part = intersecs.getfrom(endpoint)
-    return directionvalid(part, getclosestendpoint(part, endpoint.pos), dir)
-}
-
-endpID getclosestendpoint(part, pos) {
-
+    string type; // line, point, point_hollow
+    vector<vec2> points;
 }
 
 /**********************************************************/
@@ -61,59 +73,32 @@ endpID getclosestendpoint(part, pos) {
 
 // generate parts
 
-arr parts ..
+arr<part> parts ..
 
-parts push points rand [a]
+parts push points rand([a])
     - standard
     ?b circular
-parts push points rand [c]
-    - 45deg variations
-
-// generate intersections
-
-arr intersections ..
-    ?d
-    - no more than [d1]deg difference
-    - must be perpendicular to each other
+parts push lines rand([c])
+    - 45deg variations 
 
 /* ENSURE CONNECTIONS */
 
-//  match parts & intersections
+arr<ref> intersecs ..
 
-for intersec
-    rand line1
-    rand line2
-    while (previous intersec.pair = pair(rand1, rand2)) {
-        regen
-        attempts > 10 regen from #generatebag
+//  generate intersections
+
+intersecCount = unknownformula([e])
+    ?d
+    - no more than [d1]deg difference
+    - must be perpendicular to each other
+for intersecCount
+    part line1
+    part line2
+    do while (intersecs.has(line1) || intersecs.has(line2)) {
+        line1, line2 = parts[rand]
+        if attempts > 10 regen from #generatebag
     }
-    intersec.1 = line1 . endpoint[rand]
-    intersec.2 = line2 . endpoint[rand]
-
-// add reference points for unconnected parts
-
-arr referencepoints ..
-
-for part
-    if not intersecs.has(part) {
-        endp1 = endpoint[rand]
-        part2 = parts[rand]
-        endp2 = part2 . endpoint[rand]
-
-        bool checkintersec = intersecs.hasendp(endp2)
-        if checkintersec { intersecs.getfrom(endp2).otherendp }
-
-        if checkintersec {
-            do while !directionvalid(part, endp2.getID, dir) {
-                refdir = direction rand % 8
-            }
-        }
-        else {
-            do while !directionvalid(part, endp2.getID, dir) && nooverlapwithintersec(endp2, dir)
-        }
-        
-        new reference point{endp1, endp2, refdir}
-    }
+    intersecs.add(ref{line1, line2, false})
 
 //
 // Intersecs & refs are same type of object, just with a different offset
@@ -126,3 +111,32 @@ for part
 
 // assemble based on intersec and referencepoints
 
+struct assemblypart {
+    part part;
+    bool isadded = false;
+    vec2 adjustment = {0,0};
+}
+
+arr<assemblypart> assemblyparts ..
+
+for item : parts
+    assemblyparts.add(assemblypart{item, false, {0,0}})
+
+int firstpartID = rand % assemblyparts.size
+
+assemblyparts[firstpartID].isadded = true;
+
+while(not assemblyparts.fullyadded()) {
+    for item : assemblyparts
+        if item.isadded = false {
+            if intersecs.exists(assemblyparts.addedtovector(), item.part.ID) {
+                item.adjustment = itersec.getotherpart(item.part.ID).points.at(rand);
+            }
+            else {
+                item.adjustment = assemblyparts.addedtovector().at(rand).part.points.at(rand)
+            }
+        }
+}
+
+TODO: figure out how the hell to have a part in multiple intersections
+TODO: make sure parts don't overlap. Could be here, could just be an end check
