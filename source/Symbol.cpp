@@ -112,7 +112,7 @@ void Symbol::bakeTexture(int scale, double strokeThickness) {
                             double distance = (double)sqrt(pow(differenceX, 2) + pow(differenceY, 2));
 
                             // check if closer than thickness threshold and draw if so
-                            if (distance <= strokeThickness*1.5) {
+                            if (distance <= strokeThickness*2) {
                                 canvas.setPixel(toVector2u(x, y), drawColor);
                             }
 

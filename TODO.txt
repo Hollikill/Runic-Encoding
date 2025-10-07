@@ -1,0 +1,1 @@
+one item in symbol display spilling over into the void per row
