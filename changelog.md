@@ -1,10 +1,19 @@
 # Changelog
 
-## 10.2.2025
+## v0.1.7
+_10.7.2025_
+
+- Downgraded imgui to 1.91.9 from 1.92.3 for imgui-sfml library compatibility
+- Images render on correct Z-layer
+- Flexible symbol display
+
+## v0.1.6
+_10.2.2025_
 
 - finally actually rendering symbols. ugh...
 
-## 10.1.2025
+## v0.1.5
+_10.1.2025_
 
 - Now using SFML library for rendering symbols
 - Now using Dear ImGui, and imgui-sfml libraries
@@ -16,7 +25,8 @@
   - change settings: yes
 - CMake integration w/ libraries (yay!)
 
-## 9.26.2025
+## v0.1.4
+_9.26.2025_
 
 - very basic Dictionary class functions
 - Definitons class
@@ -26,7 +36,8 @@
 - input validation
 - integration of Dictionary and Definition classes
 
-## 9.23.2025
+## v0.1.3
+_9.23.2025_
 
 - Fixed display function
 - Generate multiple symbols
@@ -34,16 +45,19 @@
   - total dictionary size
   - maximum number of symbols in a word
 
-## 9.17.2025
+## v0.1.2
+_9.17.2025_
 
 - attempt to get lines displaying and working correctly
 
-## 9.16.2025
+## v0.1.1
+_9.16.2025_
 
 - Basic coorinate point generation
 - Debug symbol display
 - Basic Symbol class structure
 
-## 9.15.2025
+## v0.1.0
+_9.15.2025_
 
 - inital commit

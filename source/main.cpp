@@ -13,11 +13,6 @@
 #include "Dictionary.h"
 #include "DisplayManager.h"
 
-struct heldSymbol {
-    int symbolID;
-    sf::Vector2f pos;
-};
-
 class environmentData {
 public:
     bool manualSeedInput = false;
@@ -27,12 +22,8 @@ public:
     DisplayManager* displayManager = nullptr;
 };
 
-void settingsMenu(environmentData&);
 bool toggleSetting(std::string, bool);
-int menu();
-int menu(std::map<int, std::string>);
-int menu(std::map<int, std::string>, std::string);
-void displayDictionarySymbols(environmentData);
+void displayDictionarySymbols(environmentData, std::vector<sf::Texture*>&, bool&);
 void createNewDictioanry(environmentData&, int, int);
 void regenerateSeed(environmentData);
 int uniqueOrderedCombinationsWithDuplicates (int uniqueElements, int maximumSize);
@@ -68,6 +59,12 @@ int main() {
     // ensure delete protection for dictionaries
     bool confirmCreation = false;
 
+    // flags for keeping popup windows open
+    bool popupDisplaySymbols = false;
+
+    ImGuiStyle* style = &ImGui::GetStyle();
+    style->WindowMinSize = { 300, 150 };
+
     sf::Clock deltaClock;
     while (window.isOpen())
     {
@@ -93,16 +90,7 @@ int main() {
         ImGui::SFML::Update(window, deltaClock.restart());
         window.clear();
 
-        std::vector<heldSymbol> drawOver;
-
-        /* DEBUG show symbol 0
-        if (displayingSymbol) {
-            environment.currentDictionary->symbols.at(0)->bakeTexture(10, 0.5);
-            sf::Texture texture = environment.currentDictionary->symbols.at(0)->getBakedTexture(10);
-            sf::Sprite sprite(texture);
-            sprite.setPosition({ 10,10 });
-            window.draw(sprite);
-        }*/
+        std::vector<sf::Texture*> texRefs;
 
         //fill screen
         ImGuiIO io = ImGui::GetIO();
@@ -154,85 +142,13 @@ int main() {
         }
 
         // displaying a dictionary
-        if (ImGui::Button("Display Dictionary")) {
+        if (ImGui::Button("Display Dictionary") && environment.currentDictionary) {
             ImGui::OpenPopup("Dictionary Symbols");
+            popupDisplaySymbols = true;
         }
-        if (ImGui::BeginPopup("Dictionary Symbols", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar)) {
-            ImGui::SetWindowSize({ (((float)environment.displayManager->resolutionScale*8)+30)*7, io.DisplaySize.y-ImGui::GetWindowPos().y});
-
-            bool queueRebaking = false;
-            if (ImGui::BeginMenuBar()) {
-                if (ImGui::BeginMenu("Symbol Size")) {
-                    if (ImGui::MenuItem("Small")) {
-                        environment.displayManager->resolutionScale = 5;
-                    }
-                    if (ImGui::MenuItem("Medium", "recommened option")) {
-                        environment.displayManager->resolutionScale = 10;
-                    }
-                    if (ImGui::MenuItem("Large Symbols")) {
-                        environment.displayManager->resolutionScale = 20;
-                    }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Line Thickness")) {
-                    if (ImGui::MenuItem("Very Thin")) {
-                        if (environment.displayManager->resolutionScale != 0.5) {
-                            queueRebaking = true;
-                        }
-                        environment.displayManager->strokeThickness = 0.5;
-                    }
-                    if (ImGui::MenuItem("Normal")) {
-                        if (environment.displayManager->resolutionScale != 1.5) {
-                            queueRebaking = true;
-                        }
-                        environment.displayManager->strokeThickness = 1.5;
-                    }
-                    if (ImGui::MenuItem("Thick")) {
-                        if (environment.displayManager->resolutionScale != 3) {
-                            queueRebaking = true;
-                        }
-                        environment.displayManager->strokeThickness = 3;
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMenuBar();
-            }
-
-            Dictionary* dictionary = environment.currentDictionary;
-            std::map<int, Symbol*> symbols = dictionary->symbols;
-            int exclusiveLowerBound = -1;
-            for (int i = 0; i < symbols.size(); i++) {
-                if (i % 6 != 0) {
-                    ImGui::SameLine();
-                }
-
-                std::string symbolTitle = "Symbol " + std::to_string(i);
-                const char* symbolTag = symbolTitle.c_str();
-
-
-                float symbolDisplaySize = (float)environment.displayManager->resolutionScale * 10;
-                ImGui::BeginChild(symbolTag, { std::max<float>(symbolDisplaySize, 70.f), symbolDisplaySize + 10}, NULL, ImGuiWindowFlags_NoTitleBar);
-                ImGui::Text(symbolTag);
-
-                // find next symbol in dict
-                int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
-                exclusiveLowerBound = nextSymbol + 1;
-
-                if (queueRebaking) {
-                    symbols.at(nextSymbol)->queueRebakeTextures();
-                }
-                if (!symbols.at(nextSymbol)->isBaked((float)environment.displayManager->resolutionScale)) {
-                    symbols.at(nextSymbol)->bakeTexture((float)environment.displayManager->resolutionScale, environment.displayManager->strokeThickness);
-                }
-                sf::Vector2f minBound = { ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y+20 };
-                //sf::Texture texture = symbols.at(nextSymbol)->getBakedTexture((float)environment.displayManager->resolutionScale);
-                //sf::Sprite sprite(texture);
-                //sprite.setPosition(minBound);
-                //window.draw(sprite);
-                drawOver.push_back(heldSymbol{ nextSymbol, minBound });
-                ImGui::EndChild();
-            }
-            ImGui::EndPopup();
+        if (popupDisplaySymbols) {
+            displayDictionarySymbols(environment, texRefs, popupDisplaySymbols);
+            
         }
 
         // changing settings
@@ -247,26 +163,15 @@ int main() {
         }
 
         ImGui::End();
-
-        /*
-        Simply ensures SFML drawing is done correctly
-        sf::CircleShape circ(300, (rand() % 4) + 30);
-        circ.setFillColor(sf::Color::Yellow);
-        float radius = (float)((rand()%6)+297);
-        circ.setRadius(radius);
-        circ.setOrigin({radius, radius});
-        circ.setPosition({ 300, 300 });
-        window.draw(circ);*/
         
         ImGui::SFML::Render(window); // This should be last render step most of the time
 
-        for (auto s : drawOver) {
-            sf::Texture texture = environment.currentDictionary->symbols.at(s.symbolID)->getBakedTexture((float)environment.displayManager->resolutionScale);
-            sf::Sprite sprite(texture);
-            sprite.setPosition(s.pos);
-            window.draw(sprite);
+        // cleanup step required for imgui::image
+        for (auto item : texRefs) {
+            delete item;
+            item = nullptr;
         }
-        drawOver.clear();
+        texRefs.clear();
 
         window.display();
     }
@@ -274,25 +179,6 @@ int main() {
     ImGui::SFML::Shutdown();
 
 	return 0;
-}
-
-void drawDictinoarySymbols(std::vector<heldSymbol> drawOver) {
-
-}
-
-void settingsMenu(environmentData& environment) {
-    int choice = menu(MENU_SETTINGS, TITLES_MENU.at("settings"));
-    while (choice != MENU_SETTINGS.rbegin()->first) {
-        switch(choice) {
-            case 1:
-                environment.manualSeedInput = toggleSetting("Manual seed input", environment.manualSeedInput);
-                break;
-            case 2:
-                environment.additionalOutput = toggleSetting("Additional output", environment.additionalOutput);
-                break;
-        }
-        choice = menu(MENU_SETTINGS, TITLES_MENU.at("settings"));
-    }
 }
 
 bool toggleSetting(std::string settingDisplayName, bool settingState) {
@@ -307,64 +193,92 @@ bool toggleSetting(std::string settingDisplayName, bool settingState) {
     return returnValue;
 }
 
-int menu() { return menu(MENU_MAIN, "MAIN MENU"); }
-int menu(std::map<int, std::string> optionNames) { return menu(optionNames, "MENU_TITLE_DEFAULT"); }
-int menu(std::map<int, std::string> optionNames, std::string title) {
-    std::cout << std::endl << title << std::endl;
+void displayDictionarySymbols(environmentData environment, std::vector<sf::Texture*>& texRefs, bool& popupDisplaySymbols) {
+    if (ImGui::BeginPopupModal("Dictionary Symbols", NULL, ImGuiWindowFlags_MenuBar)) {
+        float itemWidth = ((float)environment.displayManager->resolutionScale * 8) + 30;
+        int itemsPerRow = floor(ImGui::GetWindowSize().x / itemWidth);
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        float windowEndPosY = windowPos.y + (ImGui::GetWindowSize().y);
+        //ImGui::SetWindowSize({ (((float)environment.displayManager->resolutionScale*8)+30)*7, io.DisplaySize.y-ImGui::GetWindowPos().y});
 
-    std::vector<int> possibleOptions;
-    int exclusiveLowerBound = -1;
-    for (int i = 0; i < optionNames.size(); i++) {
-        int nextItem = optionNames.lower_bound(exclusiveLowerBound)->first;
-        exclusiveLowerBound = nextItem+1;
-        std::cout << nextItem << ". " << optionNames.at(nextItem) << std::endl;
-        possibleOptions.push_back(nextItem);
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Close")) {
+                    popupDisplaySymbols = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Symbol Size")) {
+                if (ImGui::MenuItem("Small")) {
+                    environment.displayManager->resolutionScale = 5;
+                }
+                if (ImGui::MenuItem("Medium", "recommened option")) {
+                    environment.displayManager->resolutionScale = 10;
+                }
+                if (ImGui::MenuItem("Large Symbols")) {
+                    environment.displayManager->resolutionScale = 20;
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Line Thickness")) {
+                if (ImGui::MenuItem("Very Thin")) {
+                    environment.displayManager->strokeThickness = 0.5;
+                }
+                if (ImGui::MenuItem("Normal")) {
+                    environment.displayManager->strokeThickness = 1.0;
+                }
+                if (ImGui::MenuItem("Thick")) {
+                    environment.displayManager->strokeThickness = 3;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        Dictionary* dictionary = environment.currentDictionary;
+        std::map<int, Symbol*> symbols = dictionary->symbols;
+        int exclusiveLowerBound = -1;
+        for (int i = 0; i < symbols.size(); i++) {
+            if (itemsPerRow > 0) {
+                if (i % itemsPerRow != 0) {
+                    ImGui::SameLine();
+                }
+            }
+
+            std::string symbolTitle = "ID: {" + std::to_string(i) + "}";
+            const char* symbolTag = symbolTitle.c_str();
+
+
+            float symbolDisplaySize = (float)environment.displayManager->resolutionScale * 10;
+            ImGui::BeginChild(symbolTag, { std::max<float>(symbolDisplaySize, 70.f), symbolDisplaySize + 10 }, NULL, ImGuiWindowFlags_NoTitleBar);
+            ImGui::Text(symbolTag);
+
+            // find next symbol in dict
+            int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
+            exclusiveLowerBound = nextSymbol + 1;
+
+            ImVec2 minBound = { ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y + 20 };
+            if (windowPos.y-symbolDisplaySize < minBound.y && minBound.y < windowEndPosY) {
+                if (!symbols.at(nextSymbol)->isBaked(environment.displayManager->resolutionScale, environment.displayManager->strokeThickness)) {
+                    symbols.at(nextSymbol)->bakeTexture(environment.displayManager->resolutionScale, environment.displayManager->strokeThickness);
+                }
+
+                sf::Texture* tex = new sf::Texture(symbols.at(nextSymbol)->getBakedTexture(environment.displayManager->resolutionScale));
+                texRefs.push_back(tex); // for later cleanup
+                ImGui::Image(*tex);
+            }
+            else {
+                ImGuiStyle* style = &ImGui::GetStyle();
+                style->Colors[ImGuiCol_Text] = ImVec4(1, 0, 0, 1);
+                ImGui::Text("No Display");
+                style->Colors[ImGuiCol_Text] = ImVec4(1, 1, 1, 1);
+            }
+            
+            ImGui::EndChild();
+        }
+        ImGui::EndPopup();
     }
-    std::cout << "Enter number of chosen option: ";
-
-    int input = 0;
-    std::cin >> input;
-    while (!input || (std::find(possibleOptions.begin(), possibleOptions.end(), input) == possibleOptions.end())) {
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "ERROR 1: Invalid menu input value" << std::endl;
-        std::cin >> input;
-    }
-
-    return input;
-}
-
-void displayDictionarySymbols(environmentData environment) {
-    /*ImGui::Text("All symbols in current dictioanry");
-    ImGui::SliderInt("Size of symbols", &environment.displayManager->resolutionScale, 5, 25);
-    ImGui::Separator();
-
-    Dictionary* dictionary = environment.currentDictionary;
-    std::map<int,Symbol*> symbols = dictionary->symbols;
-    int exclusiveLowerBound = -1;
-    for (int i = 0; i < symbols.size(); i++) {
-        std::string symbolTitle = "Symbol " + std::to_string(i);
-        const char* symbolTag = symbolTitle.c_str();
-
-
-        float symbolDisplaySize = (float)environment.displayManager->resolutionScale * 10;
-        ImGui::BeginChild(symbolTag, { symbolDisplaySize, symbolDisplaySize+10 }, NULL, ImGuiWindowFlags_NoTitleBar);
-        ImGui::Text(symbolTag);
-
-        // find next symbol in dict
-        int nextSymbol = symbols.lower_bound(exclusiveLowerBound)->first;
-        exclusiveLowerBound = nextSymbol+1;
-        
-        unsigned int size = symbols.at(nextSymbol)->getGridSize() * environment.displayManager->resolutionScale;
-        sf::Image canvas({size,size}, sf::Color::Black);
-        environment.displayManager->renderSymbol(symbols.at(nextSymbol), canvas);
-        sf::Texture texture(canvas, false);
-        sf::Sprite sprite(texture);
-        ImGui::Image(sprite, sf::Color::Blue, sf::Color::Magenta);
-        sprite.setPosition({ 1500, 1500 });
-        environment.displayManager->window.draw(sprite);
-        ImGui::EndChild();
-    }*/
 }
 
 void createNewDictioanry(environmentData& environment, int totalWords, int maxSymbols) {

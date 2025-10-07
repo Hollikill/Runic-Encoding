@@ -37,7 +37,20 @@ int Symbol::getGridSize() const {
 bool Symbol::isBaked(int scale) const {
     bool found = false;
     for (int i = 0; i < bakedTextures.size(); i++) {
-        if (bakedTextures.at(i).scale == scale && !bakedTextures.at(i).needsRebake) { found = true; }
+        if (bakedTextures.at(i).scale == scale &&
+            !bakedTextures.at(i).needsRebake) {
+            found = true;
+        }
+    }
+    return found;
+}
+
+bool Symbol::isBaked(int scale, double strokeThickness) const {
+    bool found = false;
+    for (int i = 0; i < bakedTextures.size(); i++) {
+        if (bakedTextures.at(i).scale == scale &&
+            bakedTextures.at(i).strokeThickness == strokeThickness &&
+            !bakedTextures.at(i).needsRebake) { found = true; }
     }
     return found;
 }

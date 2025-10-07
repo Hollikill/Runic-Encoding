@@ -31,6 +31,7 @@ public:
     int getGridSize() const;
 
     bool isBaked(int) const;
+    bool isBaked(int, double) const;
     sf::Texture getBakedTexture(int scale);
     void queueRebakeTextures();
     void queueRebakeTexture(int);

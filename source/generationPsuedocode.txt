@@ -73,7 +73,7 @@ parts push points rand [c]
 
 arr intersections ..
     ?d
-    - no more than [d1] difference
+    - no more than [d1]deg difference
     - must be perpendicular to each other
 
 /* ENSURE CONNECTIONS */
@@ -114,6 +114,13 @@ for part
         
         new reference point{endp1, endp2, refdir}
     }
+
+//
+// Intersecs & refs are same type of object, just with a different offset
+// Points are only added in ref step
+// Points return same endp from intersecs.otherendp
+// Each endp is marked with an invalid dir enum
+//
 
 /* ASSEMBLY STEPS */
 
