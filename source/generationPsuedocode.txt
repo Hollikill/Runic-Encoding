@@ -63,8 +63,14 @@ enum DIRECTION {
 }
 
 struct part {
-    string type; // line, point, point_hollow
+    int type; // using enum PART_TYPE
     vector<vec2> points;
+}
+
+enum PART_TYPE {
+    line,
+    point,
+    point_hollow
 }
 
 /**********************************************************/
@@ -80,6 +86,41 @@ parts push points rand([a])
     ?b circular
 parts push lines rand([c])
     - 45deg variations 
+
+/**********************************************************/
+
+// generate a number of intersections
+
+enum SELECTION_CRITERIA_TYPE {
+    none,
+    filtered,
+    lowangle
+}
+
+class GenericIntersection {
+    partID one;
+    partID two;
+
+    int selectionCriteriaType; // using enum SELECTION_CRITERIA_TYPE
+    vector<int> validComponents; // using enum PART_TYPE
+}
+
+// 1: assign intersections to parts that fit criteria
+// 2: ensure no loops exist in the node-graph of intersections, or redo 1
+// 3: assemble each isolated island using random valid configurations
+// this should be done step-by-step, only 2 parts at a time.
+// This begins from one parts, proceeds to all the connected parts one-by-one, and after all of them recursively does the same for each of those
+// 3a: valid criteria:
+//      - parts should not overlap
+//      - parts should not genertate an intersection
+// 3b: attachment method: the origin of a part will be randomly assigned to a point of the existing configuration
+//      OR a possible midpoint, in which case the length of the line is extended by one, and all parts connected further than that point are moved in the direction of the source part by one
+// TODO rest later
+
+
+TODO: Bezier curve line segments; more complex shape segments that can be extended in <x> places using predefined simple extension methods (like a line)
+
+/**********************************************************/
 
 /* ENSURE CONNECTIONS */
 

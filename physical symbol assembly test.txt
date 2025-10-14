@@ -1,0 +1,15 @@
+ 1: l up
+ 2: l upleft
+ 3: l upleft
+ 4: l downright
+ 5: l up
+ 6: p hollow
+ 7: l left
+ 8: l down
+ 9: l left
+10: l right
+11: l left
+12: l up
+13: l left
+14: p
+15: l right
